@@ -1,3 +1,4 @@
+require("./config/config");
 const express = require("express");
 const bodyParser = require("body-parser");
 const _ = require("lodash");
@@ -9,7 +10,6 @@ const {User} = require("./models/User");
 
 const app = express();
 
-const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -96,6 +96,8 @@ app.patch("/todos/:id",(req,res)=>{
       })
 })
 
+const port = process.env.PORT;
+console.log("port ="+port);
 app.listen(port,()=>{
   console.log(`app is listening to port: ${port}`);
 })
