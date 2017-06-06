@@ -87,17 +87,52 @@ describe("GET /todos/:id",()=>{
       .end(done)
   })
 
-  it("should return 400 status if todo not found",(done)=>{
+  it("should return 404 status if todo not found",(done)=>{
     var id = todos[0]._id;
     request(app)
     .get(`/todos/${id+1}`)
-    .expect(400)
+    .expect(404)
     .end(done)
   })
   it("should return error if the id is not valid",(done)=>{
     request(app)
     .get("/todos/123")
-    .expect(400)
+    .expect(404)
     .end(done)
+  })
+})
+
+describe("DELETE /todos/:id",()=>{
+  it("should delete an todo object",(done)=>{
+      request(app)
+      .delete(`/todos/${todos[0]._id}`)
+      .expect(200)
+      .expect((res)=>{
+        expect(res.body.todo.text).toBe(todos[0].text)
+      })
+      .end((err,res)=>{
+        if(err)
+          return done(err)
+
+          Todo.findById(todos[0]._id).then((todo)=>{
+            expect(todo).toNotExist();
+            done();
+          }).catch((e)=> done(e));
+      })
+  })
+
+  it("should give me 404 for id not found ",(done)=>{
+    var id = todos[0]._id;
+      request(app)
+      .delete(`/todos/${id+1}`)
+      .expect(404)
+      .end(done)
+  })
+
+  it("should give me 404 for id is not valid ",(done)=>{
+      request(app)
+      .delete(`/todos/123`)
+      .expect(404)
+      .end(done)
   })
 })
