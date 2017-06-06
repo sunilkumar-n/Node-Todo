@@ -12,7 +12,9 @@ const todos = [
   },
   {
     "_id":new ObjectID(),
-    "text":"this is for testing2"
+    "text":"this is for testing2",
+    "completed":true,
+    "completedAt":343
   }
 ]
 beforeEach((done) =>{
@@ -135,4 +137,31 @@ describe("DELETE /todos/:id",()=>{
       .expect(404)
       .end(done)
   })
+})
+
+describe("PATCH /todos/:id",()=>{
+    it("should set completedat when completed is true",(done)=>{
+        var id = todos[1]._id;
+        var text = "this is updated text";
+        request(app)
+        .patch(`/todos/${id}`)
+        .send({completed:true,text})
+        .expect(200)
+        .expect((res)=>{
+          expect(res.body.todo.completedAt).toBeA('number');
+        expect(res.body.todo.text).toBe(text);
+        })
+        .end(done)
+    })
+
+    it("should set completedAt to null when completed is false",(done)=>{
+      var id = todos[0]._id;
+        request(app)
+        .patch(`/todos/${id}`)
+        .expect(200)
+        .expect((res)=>{
+          expect(res.body.todo.completedAt).toBe(null)
+        })
+        .end(done)
+    })
 })
