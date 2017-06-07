@@ -3,25 +3,12 @@ const request = require("supertest");
 
 const {app} = require("./../server");
 const {Todo} = require("./../models/Todo");
+const {User} = require("./../models/User");
 const {ObjectID} = require("mongodb");
+const {todos, populateTodos, users, populateUsers} =require("./seed/seed");
 
-const todos = [
-  {
-    "_id":new ObjectID(),
-    "text":"this is for testing1"
-  },
-  {
-    "_id":new ObjectID(),
-    "text":"this is for testing2",
-    "completed":true,
-    "completedAt":343
-  }
-]
-beforeEach((done) =>{
-  Todo.remove({}).then(()=>{
-    return Todo.insertMany(todos)
-  }).then(() =>done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe("POST /todos",()=>{
   it("should insert a text to mongoose database",(done)=>{
@@ -163,5 +150,69 @@ describe("PATCH /todos/:id",()=>{
           expect(res.body.todo.completedAt).toBe(null)
         })
         .end(done)
+    })
+})
+
+//test cases for users
+describe("GET /users/me",()=>{
+  it("should return an valid user when passed with valid token",(done)=>{
+      request(app)
+      .get("/users/me")
+      .set("x-auth",users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) =>{
+        expect(res.body._id).toBe(users[0]._id.toHexString())
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  })
+
+  it("should return an 401 response when token is empty",(done)=>{
+      request(app)
+      .get("/users/me")
+      .expect(401)
+      .expect((res)=>{
+        expect(res.body).toEqual({});
+      })
+      .end(done)
+  })
+})
+
+describe("POST /users",()=>{
+    it("should create a new user ",(done)=>{
+        request(app)
+        .post("/users")
+        .send({email:"suniltest@example.com",password:"pass123"})
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.email).toBe("suniltest@example.com");
+            expect(res.header["x-auth"]).toExist();
+        })
+        .end((err)=>{
+            if(err)
+              return done(err);
+              User.findOne({email:"suniltest@example.com"}).then((user)=>{
+                  expect(user._id).toExist();
+                  expect(user.password).toNotEqual("pass123")
+                  done();
+                })
+        })
+    })
+
+    it("should validate and return validation error if invalid",(done)=>{
+        request(app)
+        .post("/users")
+        .send({email:"myemail",password:"123"})
+        .expect(400)
+        .end(done)
+    })
+
+    it("should not create a user with same email",(done)=>{
+        request(app)
+        .post("/users")
+        .send(users[0])
+        .expect(400)
+        .end(done)
+
     })
 })
