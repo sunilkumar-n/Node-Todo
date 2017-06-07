@@ -2,6 +2,7 @@ const {SHA256} = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+console.log(bcrypt.getSalt("$2a$10$aYq9xSZ0g.fQXgKomTBkcuiHn5bK4KnPLC6UQYniYS5MzwwaSGPXi"));
 // bcrypt.hash("123Abc!",10,(err,res)=>{
 //   console.log(res);
 // })

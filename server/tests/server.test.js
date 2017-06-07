@@ -195,6 +195,8 @@ describe("POST /users",()=>{
                   expect(user._id).toExist();
                   expect(user.password).toNotEqual("pass123")
                   done();
+                }).catch ((err)=>{
+                  done(err);
                 })
         })
     })
@@ -214,5 +216,61 @@ describe("POST /users",()=>{
         .expect(400)
         .end(done)
 
+    })
+})
+
+describe("POST /users/login",()=>{
+    it("should return a valid token, if user exist",(done)=>{
+        request(app)
+        .post("/users/login")
+        .send({email:users[0].email,password:users[0].password})
+        .expect(200)
+        .expect((res)=>{
+            expect(res.headers["x-auth"]).toExist();
+            expect(res.body.email).toBe(users[0].email)
+        })
+        .end(done)
+    })
+
+    it("should return 400 if user doesnt exist",(done)=>{
+      request(app)
+      .post("/users/login")
+      .send({email:"someemail@example.com",password:users[0].password})
+      .expect(400)
+      .expect((res)=>{
+          expect(res.body).toEqual({});
+      })
+      .end(done)
+    })
+})
+
+describe("DELETE /users/me/token",()=>{
+    it("should delete a token of user",(done)=>{
+      request(app)
+      .delete("/users/me/token")
+      .set("x-auth",users[0].tokens[0].token)
+      .expect(200)
+      .end((err,res)=>{
+          if(err)
+          return done(err)
+
+          //find the user and expect tokens length 0
+          User.findOne({email:users[0].email}).then((user)=>{
+              if(!user)
+              return done();
+              expect(user.tokens.length).toBe(0);
+              done()
+          }).catch ((err)=>{
+            done(err);
+          })
+      })
+    })
+
+    it("should give 401 for invalid token",(done)=>{
+      request(app)
+      .delete("/users/me/token")
+      .set("x-auth","123")
+      .expect(401)
+      .end(done)
     })
 })

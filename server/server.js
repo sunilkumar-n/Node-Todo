@@ -2,9 +2,10 @@ require("./config/config");
 const express = require("express");
 const bodyParser = require("body-parser");
 const _ = require("lodash");
-
 const {mongoose} = require("./db/mongoose");
 const {ObjectID} = require("mongodb");
+const bcrypt = require("bcryptjs");
+
 const {Todo} = require("./models/Todo");
 var {User} = require("./models/User");
 var {authenticate} = require("./middleware/authenticate");
@@ -113,6 +114,27 @@ app.post("/users",(req,res)=>{
 app.get("/users/me",authenticate, (req,res)=>{
     res.send(req.user)
 });
+
+//route for login
+app.post("/users/login",(req,res)=>{
+    var userObj = _.pick(req.body,["email","password"]);
+
+    User.validateCredentials(userObj.email,userObj.password).then((user)=>{
+          return user.generateAuthToken().then((token)=>{
+              res.header("x-auth",token).send(user)
+          })
+    }).catch ((err) =>{res.status(400).send();})
+
+})
+
+//route for deleting token
+app.delete("/users/me/token", authenticate, (req,res)=>{
+    req.user.removeToken(req.token).then((result)=>{
+      res.status(200).send()
+    },(err)=>{
+        res.status(400).send()
+    })
+})
 
 const port = process.env.PORT;
 
