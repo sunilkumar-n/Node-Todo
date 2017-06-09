@@ -4,16 +4,22 @@ const jwt = require("jsonwebtoken");
 const {Todo} = require("./../../models/Todo");
 const {User} = require("./../../models/User");
 
+
+var userOneId = new ObjectID();
+var userTwoId = new ObjectID();
+
 const todos = [
   {
     "_id":new ObjectID(),
-    "text":"this is for testing1"
+    "text":"this is for testing1",
+    "creator":userOneId
   },
   {
     "_id":new ObjectID(),
     "text":"this is for testing2",
     "completed":true,
-    "completedAt":343
+    "completedAt":343,
+    "creator":userTwoId
   }
 ]
 
@@ -23,8 +29,6 @@ const populateTodos = (done) =>{
   }).then(() =>done());
 }
 
-var userOneId = new ObjectID();
-var userTwoId = new ObjectID();
 const users = [
   {
     "_id":userOneId,
@@ -33,14 +37,20 @@ const users = [
     "tokens":[
       {
         access:"auth",
-        token:jwt.sign({_id:userOneId.toHexString(),access:"auth"},"123abc").toString()
+        token:jwt.sign({_id:userOneId.toHexString(),access:"auth"},process.env.APP_SECREAT).toString()
       }
     ]
   },
   {
     "_id":userTwoId,
     "email":"sunil2@gmail.com",
-    "password":"1234Abc!"
+    "password":"1234Abc!",
+    "tokens":[
+      {
+        access:"auth",
+        token:jwt.sign({_id:userTwoId.toHexString(),access:"auth"},process.env.APP_SECREAT).toString()
+      }
+    ]
   }
 ]
 

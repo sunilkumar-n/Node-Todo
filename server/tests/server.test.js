@@ -16,7 +16,8 @@ describe("POST /todos",()=>{
 
       request(app)
       .post("/todos")
-      .send({text})
+      .set("x-auth",users[0].tokens[0].token)
+      .send({text,creator:users[0]._id})
       .expect(200)
       .expect((res)=>{
         expect(res.body.text).toBe(text)
@@ -37,13 +38,14 @@ describe("POST /todos",()=>{
       var text="";
       request(app)
       .post("/todos")
+      .set("x-auth",users[0].tokens[0].token)
       .send({text})
       .expect(400)
       .end((err,res)=>{
         if(err)
           return done(err);
-         Todo.find().then((result)=>{
-           expect(result.length).toBe(2);
+         Todo.find({creator:users[0]._id}).then((result)=>{
+           expect(result.length).toBe(1);
            done();
          }).catch((e)=>done(e))
 
@@ -57,9 +59,10 @@ describe("GET /todos",()=>{
   it("should return all the todos from database",(done)=>{
       request(app)
       .get("/todos")
+      .set("x-auth",users[0].tokens[0].token)
       .expect(200)
       .expect((res)=>{
-        expect(res.body.todos.length).toBe(2)
+        expect(res.body.todos.length).toBe(1)
       })
       .end(done)
   })
@@ -69,6 +72,7 @@ describe("GET /todos/:id",()=>{
   it("should return valid todo object",(done)=>{
       request(app)
       .get(`/todos/${todos[0]._id}`)
+      .set("x-auth",users[0].tokens[0].token)
       .expect(200)
       .expect((res)=>{
         expect(res.body.todo.text).toBe(todos[0].text)
@@ -80,12 +84,14 @@ describe("GET /todos/:id",()=>{
     var id = todos[0]._id;
     request(app)
     .get(`/todos/${id+1}`)
+    .set("x-auth",users[0].tokens[0].token)
     .expect(404)
     .end(done)
   })
   it("should return error if the id is not valid",(done)=>{
     request(app)
     .get("/todos/123")
+    .set("x-auth",users[0].tokens[0].token)
     .expect(404)
     .end(done)
   })
@@ -95,6 +101,7 @@ describe("DELETE /todos/:id",()=>{
   it("should delete an todo object",(done)=>{
       request(app)
       .delete(`/todos/${todos[0]._id}`)
+        .set("x-auth",users[0].tokens[0].token)
       .expect(200)
       .expect((res)=>{
         expect(res.body.todo.text).toBe(todos[0].text)
@@ -114,6 +121,7 @@ describe("DELETE /todos/:id",()=>{
     var id = todos[0]._id;
       request(app)
       .delete(`/todos/${id+1}`)
+      .set("x-auth",users[0].tokens[0].token)
       .expect(404)
       .end(done)
   })
@@ -121,6 +129,7 @@ describe("DELETE /todos/:id",()=>{
   it("should give me 404 for id is not valid ",(done)=>{
       request(app)
       .delete(`/todos/123`)
+      .set("x-auth",users[0].tokens[0].token)
       .expect(404)
       .end(done)
   })
@@ -132,6 +141,7 @@ describe("PATCH /todos/:id",()=>{
         var text = "this is updated text";
         request(app)
         .patch(`/todos/${id}`)
+        .set("x-auth",users[1].tokens[0].token)
         .send({completed:true,text})
         .expect(200)
         .expect((res)=>{
@@ -145,6 +155,7 @@ describe("PATCH /todos/:id",()=>{
       var id = todos[0]._id;
         request(app)
         .patch(`/todos/${id}`)
+        .set("x-auth",users[0].tokens[0].token)
         .expect(200)
         .expect((res)=>{
           expect(res.body.todo.completedAt).toBe(null)
